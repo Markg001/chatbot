@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mark's Chatbot</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    /* Floating icon button */
+    #chatbot-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: white;
+      border: none;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      z-index: 9999;
+    }
+
+    #chatbot-icon img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    /* Chat window box */
+    #chat-window {
+      display: none;
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 320px;
+      max-height: 400px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chat-messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #f9f9f9;
+      margin-bottom: 8px;
+    }
+
+    .message {
+      margin: 5px 0;
+      max-width: 80%;
+      padding: 6px 10px;
+      border-radius: 12px;
+      clear: both;
+      word-wrap: break-word;
+    }
+
+    .user-message {
+      background-color: #0084ff;
+      color: white;
+      float: right;
+      text-align: right;
+    }
+
+    .bot-message {
+      background-color: #e5e5ea;
+      color: black;
+      float: left;
+      text-align: left;
+    }
+
+    #chat-input-area {
+      display: flex;
+      gap: 6px;
+    }
+
+    #user-input {
+      flex-grow: 1;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    #send-btn {
+      padding: 8px 12px;
+      font-size: 14px;
+      background-color: #0084ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #send-btn:hover {
+      background-color: #006bbd;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Chatbot Icon -->
+  <button id="chatbot-icon" onclick="toggleChatWindow()">
+    <img src="images/small_logo.png" alt="Chatbot" />
+  </button>
+
+  <!-- Chat Window -->
+  <div id="chat-window">
+    <div id="chat-messages">
+      <p><em>Ask me anything 👇</em></p>
+    </div>
+
+    <div id="chat-input-area">
+      <input
+        type="text"
+        id="user-input"
+        placeholder="Type your message..."
+        onkeydown="if(event.key==='Enter'){ sendMessageToBot(); }"
+      />
+      <button id="send-btn" onclick="sendMessageToBot()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleChatWindow() {
+      const chatWindow = document.getElementById("chat-window");
+      chatWindow.style.display =
+        chatWindow.style.display === "none" || chatWindow.style.display === ""
+          ? "flex"
+          : "none";
+    }
+
+    async function sendMessageToBot() {
+      const inputEl = document.getElementById("user-input");
+      const message = inputEl.value.trim();
+      if (!message) return;
+
+      appendMessage(message, "user-message");
+      inputEl.value = "";
+      inputEl.focus();
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await response.json();
+        appendMessage(data.response, "bot-message");
+      } catch (error) {
+        appendMessage("Oops! Something went wrong.", "bot-message");
+      }
+    }
+
+    function appendMessage(text, className) {
+      const chatMessages = document.getElementById("chat-messages");
+      const messageEl = document.createElement("div");
+      messageEl.className = `message ${className}`;
+      messageEl.textContent = text;
+      chatMessages.appendChild(messageEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight; // auto scroll
+    }
+  </script>
+</body>
+</html>
